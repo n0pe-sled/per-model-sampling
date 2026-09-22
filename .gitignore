@@ -1,0 +1,10 @@
+# Machine-local package state (never commit)
+node_modules/
+
+# Editor / OS noise
+.DS_Store
+*.log
+
+# Build output: produced per-platform by `dsh-manage` (lib/.dsh-build-target
+# records the target); never committed.
+lib/
