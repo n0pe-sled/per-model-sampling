@@ -14,6 +14,21 @@ and nothing else.
 | input modalities | the provider's own namespace (`llm-pi-ai`'s `providers.<route>.models[].input`) | nobody: resolution, the attachment path, and the adapter read the profile directly |
 | reasoning efforts | the provider's own namespace (`llm-pi-ai`'s `providers.<route>.models[]`) | nobody: the composer picker, the resolver, and the adapter read the profile directly |
 
+## Which providers the page offers
+
+The page lists only providers this deployment has configured. `llm.providers` answers with the whole
+configurable-provider directory — every route the adapters ship, whether or not any profile declares it —
+so the page keeps the rows that are both `active` (the route is registered with the adapter registry,
+which happens only once a settings profile declared it) and carrying a `settingsNs` (the address of the profile
+the capability controls write into). A listed provider therefore always has a profile to edit, and a provider that
+appears on the Models page but is dormant does not appear here.
+
+Two follow-ons of that rule:
+
+- Adding a provider on the Models page does not make it appear here until its profile registers the route.
+- A dormant provider is offered nowhere. Nothing sends requests to it, so a temperature configured for it would
+  never be applied.
+
 ## Install
 
 ```bash
@@ -170,7 +185,10 @@ settings document, and asserts both declarations land under `providers.<route>.m
 modality list and the reasoning-effort dict — that the untouched rows survive, that clearing either
 removes the key rather than storing `[]` or `undefined`, that no materialized defaults are persisted,
 that the temperature lands only in this plugin's namespace, and that a stale revision is refused
-without changing anything.
+without changing anything. `tests/client-providers.mjs` loads the same bundle and asserts the provider
+selection: a directory of shipped-but-unconfigured routes yields only the configured one, a dormant route is
+never offered, an active route with no settings address is not offered, a hand-declared `declared: true` route
+is offered, and the kept rows pass through in directory order.
 
 Two things this cannot check from here: the rendered page (no browser installed for the Playwright
 harness) and a real gateway's request log. A live check is worth doing once per gateway:
@@ -187,9 +205,13 @@ curl -s http://10.0.100.226:8000/v1/chat/completions \
   stale for runtime packages.
 - The host's published contract packages import relatively with `.ts` extensions in their `.d.ts`,
   so `IApiClient` and its wire views resolve to `any` outside the harness repo's source-level
-  `paths` facade. This package carries no facade, so `src/client/SamplingPanel.tsx` declares the two
-  wire shapes it consumes. Matching those declarations against the host contract is part of
-  upgrading a dsh version.
+  `paths` facade. This package carries no facade, so `src/client/providers.ts` declares the provider
+  row this page consumes. Matching that declaration against the host contract is part of upgrading a
+  dsh version.
+- `src/client/providers.ts` holds the row declaration and the selection filter, and neither half of the
+  plugin imports the other for them. `src/client/index.ts` re-exports `configuredProviders` so the built
+  bundle carries it: the bundle is what the browser loads and what the tests load, and importing a `.tsx`
+  module under plain Node fails on the extension.
 - The modality vocabulary is declared twice on purpose: `MODALITIES` in `SamplingPanel.tsx` mirrors
   `llm-pi-ai`'s `catalog.ts` gate, which mirrors pi-ai's `Model['input']`. A pi-ai upgrade that adds
   a modality fails compilation in the harness first (that `Record` is a drift gate), so this list is

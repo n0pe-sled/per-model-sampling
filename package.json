@@ -26,7 +26,7 @@
     "build": "tsdown",
     "prepare": "tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "node tests/smoke.mjs && node tests/wire.mjs && node tests/client-save.mjs"
+    "test": "node tests/smoke.mjs && node tests/wire.mjs && node tests/client-save.mjs && node tests/client-providers.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.1",

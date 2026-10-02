@@ -15,6 +15,11 @@ import {
   type ThinkingLevel,
 } from './SamplingPanel.tsx'
 
+// Re-exported as the bundle's public surface: `configuredProviders` is the whole
+// of this page's provider selection, and the browser bundle is what its tests
+// load, so the filter is checkable without a rendered panel.
+export { configuredProviders, type ProviderRow } from './providers.ts'
+
 /** Plugin namespace; holds per-model temperature entries only. */
 const NAMESPACE = 'per-model-sampling'
 

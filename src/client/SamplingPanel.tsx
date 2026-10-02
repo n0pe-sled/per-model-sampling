@@ -2,25 +2,12 @@ import { useEffect, useState } from 'react'
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
 import type { SettingsDescribeFace } from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
+// Type-only for the row declaration, value for the filter the first read runs.
+import { configuredProviders, type ProviderRow } from './providers.ts'
 
-/**
- * Wire view of one configurable provider, mirroring the host's
- * `ConfigurableProviderView`.
- *
- * The host's published contracts resolve to `any` outside the harness repo's
- * source-level `paths` facade (their `.d.ts` import relatively with `.ts`
- * extensions), and this plugin repo deliberately carries no facade. Declaring
- * the two shapes this page consumes keeps its own logic checked here instead
- * of silently untyped.
- */
-export interface ProviderRow {
-  provider: string
-  displayName: string
-  settingsNs: string
-  settingsPath: string[]
-  active: boolean
-  declared?: boolean
-}
+// The row shape was declared here; it now sits beside the filter, and this
+// re-export keeps it reachable from the module that consumes it.
+export type { ProviderRow }
 
 /** One namespace as the settings wire reports it. */
 export interface NamespaceRow {
@@ -356,7 +343,7 @@ export function SamplingPanel(props: SamplingPanelProps) {
         setProviderError(response.result.error.message)
         return
       }
-      setProviders(response.result.value.providers.filter(row => row.settingsNs !== ''))
+      setProviders(configuredProviders(response.result.value.providers))
     }).catch((error: unknown) => {
       if (!cancelled) setProviderError(error instanceof Error ? error.message : String(error))
     })
@@ -515,8 +502,8 @@ export function SamplingPanel(props: SamplingPanelProps) {
     )}
     {(providers !== undefined && providers.length === 0) && (
       <p style={styles.copy}>
-        No configurable providers found. Add one through Settings → Models first; this page edits
-        models declared there.
+        No configured providers found. Set one up through Settings → Models first; this page configures
+        the models of a provider you have already configured.
       </p>
     )}
     {providerView !== undefined && (
